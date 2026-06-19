@@ -736,15 +736,16 @@ with tabs[4]:
                           devices=("devices","sum"))
                      .reset_index().sort_values("crashes", ascending=False))
 
+        issue_disp = issue_sum.rename(columns={
+            "category":"Category","issue_title":"Issue Title",
+            "crashes":"Crashes","fatal":"Fatal","devices":"Devices"})
+
         def crash_row_color(row):
-            if row["fatal"] > 0:
+            if row["Fatal"] > 0:
                 return ["background-color:#fef2f2"]*len(row)
             return [""]*len(row)
 
-        styled = (issue_sum.rename(columns={
-            "category":"Category","issue_title":"Issue Title",
-            "crashes":"Crashes","fatal":"Fatal","devices":"Devices"})
-            .style.apply(crash_row_color, axis=1))
+        styled = issue_disp.style.apply(crash_row_color, axis=1)
 
         st.dataframe(styled, use_container_width=True, hide_index=True)
 
