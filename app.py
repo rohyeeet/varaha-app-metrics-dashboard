@@ -129,9 +129,19 @@ def load_quarterly():
 
 @st.cache_data(ttl=3600, show_spinner="Loading crash data…")
 def load_crashes():
+    # Crashlytics table is NOT sharded — _TABLE_SUFFIX doesn't exist.
+    # Use event_timestamp for date filtering and quarter assignment.
     sql = f"""
     SELECT
-      {QUARTER_EXPR} AS quarter,
+      CONCAT(
+        CAST(EXTRACT(YEAR  FROM event_timestamp) AS STRING), '-Q',
+        CASE
+          WHEN EXTRACT(MONTH FROM event_timestamp) <= 3 THEN '1'
+          WHEN EXTRACT(MONTH FROM event_timestamp) <= 6 THEN '2'
+          WHEN EXTRACT(MONTH FROM event_timestamp) <= 9 THEN '3'
+          ELSE '4'
+        END
+      ) AS quarter,
       CASE
         WHEN issue_title LIKE '%NetworkRequest%' OR issue_title LIKE '%network%' THEN 'Network'
         WHEN issue_title LIKE '%SyncMedia%' OR issue_title LIKE '%MediaUpload%'
@@ -147,8 +157,7 @@ def load_crashes():
       COUNTIF(is_fatal) AS fatal_crashes,
       COUNT(DISTINCT installation_uuid) AS devices
     FROM `{PROJECT}.firebase_crashlytics.com_varaha_arrapp_ANDROID`
-    WHERE _TABLE_SUFFIX >= '20250409'
-      AND REGEXP_CONTAINS(_TABLE_SUFFIX, r'^\d{{8}}$')
+    WHERE event_timestamp >= TIMESTAMP('2025-04-09')
     GROUP BY quarter, category
     ORDER BY quarter, crashes DESC
     """
