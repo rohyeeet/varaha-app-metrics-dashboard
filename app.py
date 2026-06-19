@@ -337,7 +337,7 @@ with tabs[2]:
             if val >= 60: return "color: #d97706; font-weight:600"
             return "color: #dc2626; font-weight:700"
         return ""
-    st.dataframe(tbl.style.applymap(color_pct), use_container_width=True)
+    st.dataframe(tbl.style.map(color_pct), use_container_width=True)
 
     st.markdown("""
     <div class="callout c-good">
